@@ -1,0 +1,12 @@
+.venv/
+.pytest-of-user/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+data/
+*.sqlite3
+*.log
+.env
+docs_tz/

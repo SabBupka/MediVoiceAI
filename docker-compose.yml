@@ -1,0 +1,40 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_DB_PATH: /data/app.sqlite3
+      REGISTRY_MODE: mock
+      ASR_MODE: stub
+      TTS_MODE: stub
+      LLM_MODE: remote-local
+      LLM_BASE_URL: http://llama:8080/v1
+      LLM_MODEL: QVikhr-3-8B-Instruction-Q5_K_M
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+      - ./docs_tz:/app/docs_tz:ro
+
+  # Включается только после установки локального llama.cpp и размещения модели.
+  # Параметры GPU/модели зависят от фактического файла, который будет выбран.
+  llama:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    profiles: ["voice-models"]
+    restart: unless-stopped
+    command: ["--host", "0.0.0.0", "--port", "8080",
+              "--model", "/models/QVikhr-3-8B-Instruction-Q5_K_M.gguf",
+              "--ctx-size", "8192", "--n-gpu-layers", "999",
+              "--parallel", "2", "--flash-attn", "on"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
